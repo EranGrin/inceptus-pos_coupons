@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <record model="ir.ui.view" id="ies_product_coupon_tree">
+            <field name="name">ies_product_coupon_tree</field>
+            <field name="model">product.coupon</field>
+            <field name="arch" type="xml">
+                <tree string="Coupons" create="false" colors="grey:state in ('r');blue:state in ('o');black:state in ('s');red:state in ('e')">
+                    <field name="name" />
+                    <field name="percentage" />
+                    <field name="create_date" />
+                    <field name="sale_date" />
+                    <field name="expire_date" />
+                    <field name="sale_price" />
+                    <field name="printed" />
+                    <field name="state" />
+                </tree>
+            </field>
+        </record>
+
+        <record model="ir.ui.view" id="ies_product_coupon_form">
+            <field name="name">ies_product_coupon_form</field>
+            <field name="model">product.coupon</field>
+            <field name="arch" type="xml">
+                <form string="Coupons" create="false" edit='false'>
+                    <header>
+                        <field name="state" widget="statusbar"  readonly='1'/>
+                    </header>
+                    <sheet>
+
+                        <div class="oe_title">
+                            <label class="oe_edit_only" for="name"
+                                string="Coupon Name" />
+                            <h1>
+                                <field name="type" readonly='1'/> /
+                                <field name="name" placeholder="Coupon Name" readonly='1'/>
+                            </h1>
+
+                            <div name="options">
+                                <div>
+                                    <field name="printed" />
+                                    <label for="printed" />
+                                    <field name="single_use" />
+                                    <label for="single_use" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <group>
+                            <group>
+                                <field name="partner_id" attrs="{'invisible': [('partner_id', '=', False)]}"/>
+                                <field name="percentage"/>
+                                <field name="product_id" />
+                                <field name="pos_order_id"  attrs="{'invisible': [('pos_order_id', '=', False)]}"/>
+                            </group>
+                            <group>
+                                <field name="create_date" />
+                                <field name="sale_date" />
+                                <!-- <field name="reedem_date" /> -->
+                                <!--<field name="expire_date" />-->
+                            </group>
+                        </group>
+
+                        <notebook>
+                            <page string='Reedem History' name='reedem_history'>
+                                <field name='reedem_ids'>
+                                   <tree>
+                                        <field name="order_id" />
+                                        <field name="amount" />
+                                        <field name="shop_id" />
+                                        <field name="date" />
+                                   </tree>
+                                </field>
+                            </page>
+
+                        </notebook>
+
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.ui.view" id="ies_product_template_coupon_form">
+            <field name="name">ies.product.template.coupon.form</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="ies_base_redeem.ies_product_template_common_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//div[@name='button_box']" position="inside">
+                    <button name="open_coupons" type="object"
+                        class="oe_stat_button" icon="fa-ticket"
+                        attrs="{'invisible': [('coupon_count', '=', 0)]}"
+                        context="{'type':'p'}">
+                        <field string="Coupons"
+                            name="coupon_count" widget="statinfo" />
+                    </button>
+                </xpath>
+
+                <xpath expr="//field[@name='discount_type']" position="after">
+                    <field name="discount_percentage"
+                        attrs="{'readonly': [('generated', '=', True)], 'invisible': ['|', ('discount_type', 'in', ['f', 'd']), ('discount_type', '=', False)],
+                        'required': [('discount_type', '=', 'p')]}"/>
+                </xpath>
+            </field>
+        </record>
+
+
+        <record model="ir.actions.act_window" id="action_sale_coupon">
+            <field name="name">Coupons</field>
+            <field name="res_model">product.template</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[('is_coupon', '=', True), ('discount_type', '=', 'p')]</field>
+            <field name="context">{'default_is_coupon':1, 'coupon':1, 'default_discount_type' : 'p'}</field>
+        </record>
+
+
+        <record id="action_sale_coupon_view_tree" model="ir.actions.act_window.view">
+            <field eval="1" name="sequence" />
+            <field name="view_mode">tree</field>
+            <field name="view_id" ref="ies_base_redeem.ies_product_template_coupon_tree" />
+            <field name="act_window_id" ref="action_sale_coupon" />
+        </record>
+
+        <record id="action_sale_coupon_view_form" model="ir.actions.act_window.view">
+            <field eval="2" name="sequence" />
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="ies_base_redeem.ies_product_template_common_form" />
+            <field name="act_window_id" ref="action_sale_coupon" />
+        </record>
+
+        <menuitem id="menu_sale_coupon" name="Coupons"
+            parent='point_of_sale.menu_point_root' sequence="11" />
+
+        <menuitem id="menu_sale_coupon_conf" name="Templates"
+            parent='menu_sale_coupon' action="action_sale_coupon"
+            sequence='1' />
+
+        <record model="ir.actions.act_window" id="menu_action_giftcard_per">
+            <field name="name">Coupons</field>
+            <field name="res_model">product.coupon</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[('coupon_type', '=', 'c'),('type', '=', 'p')]</field>
+            <field name="help" type="html">
+                <p>
+                    No Giftcard Generated
+                </p>
+                <p>
+                    To generate Giftcards, Please Create new giftcard template and
+                    generate percentage giftcards.
+                </p>
+            </field>
+        </record>
+
+        <record id="menu_action_coupon_tree_view" model="ir.actions.act_window.view">
+            <field eval="1" name="sequence" />
+            <field name="view_mode">tree</field>
+            <field name="view_id" ref="ies_product_coupon_tree" />
+            <field name="act_window_id" ref="menu_action_giftcard_per" />
+        </record>
+
+        <record id="menu_action_coupon_form_view" model="ir.actions.act_window.view">
+            <field eval="2" name="sequence" />
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="ies_product_coupon_form" />
+            <field name="act_window_id" ref="menu_action_giftcard_per" />
+        </record>
+
+        <menuitem id="menu_percentage_giftcard" name="Coupons"
+            parent='menu_sale_coupon' action="menu_action_giftcard_per"
+            sequence='3' />
+
+
+    </data>
+</odoo>
